@@ -254,7 +254,7 @@ export default function Main() {
 					marginTop: 10,
 				}}
 			/>
-			<View style={{ flex: 1.3 }}>
+			<View style={{ flex: 1.5 }}>
 				<View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 18, columnGap: 20, padding: 10 }}>
 					{buttons.map((item, index) => (
 						<Pressable
