@@ -132,6 +132,15 @@ export default function Main() {
 	];
 
 	function enterHandler(value, isOperator = false) {
+		if (value == "%" && isOperator == true) {
+			if (data.secondAmount != "") {
+				setData({ ...data, secondAmount: data.secondAmount / 100 });
+			} else if (data.firstAmount != "" && data.operator == "") {
+				setData({ ...data, firstAmount: data.firstAmount / 100 });
+			}
+			return;
+		}
+
 		if (value == "+/-") {
 			if (data.operator == "") {
 				data.firstAmount != "" ? setData({ ...data, firstAmount: `${-data.firstAmount}` }) : ToastAndroid.showWithGravity("Please Enter Number First!", ToastAndroid.SHORT, ToastAndroid.CENTER);
@@ -194,9 +203,6 @@ export default function Main() {
 				break;
 			case "÷":
 				total = first / second;
-				break;
-			case "%":
-				total = first % second;
 				break;
 			default:
 				break;
