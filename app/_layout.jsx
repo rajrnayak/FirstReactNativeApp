@@ -9,11 +9,14 @@ import Home from "./pages/Home.jsx";
 import Main from "./pages/Main.jsx";
 import Index from "./pages/user/Index.jsx";
 import Form from "./pages/user/Form.jsx";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import "react-native-gesture-handler";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
 
 export default function RootLayout() {
 	const colorScheme = useColorScheme();
@@ -31,14 +34,24 @@ export default function RootLayout() {
 		return null;
 	}
 
+	function Root() {
+		return (
+			<Drawer.Navigator initialRouteName="pages/Home">
+				<Drawer.Screen name="pages/Home" component={Home} options={{ title: "Home" }} />
+				<Drawer.Screen name="pages/user/Index" component={Index} options={{ title: "User" }} />
+				<Drawer.Screen name="pages/Main" component={Main} options={{ title: "Calculator" }} />
+			</Drawer.Navigator>
+		);
+	}
+
 	return (
-		<NavigationContainer independent={true}>
-			<Stack.Navigator>
-				<Stack.Screen name="Home" component={Home} />
-				<Stack.Screen name="Main" component={Main} />
-				<Stack.Screen name="User" component={Index} />
-				<Stack.Screen name="User Form" component={Form} />
-			</Stack.Navigator>
-		</NavigationContainer>
+		<>
+			<NavigationContainer independent={true}>
+				<Stack.Navigator>
+					<Stack.Screen name="Root" component={Root} options={{ headerShown: false }} />
+					<Stack.Screen name="pages/user/Form" component={Form} options={{ title: "User Form" }} />
+				</Stack.Navigator>
+			</NavigationContainer>
+		</>
 	);
 }

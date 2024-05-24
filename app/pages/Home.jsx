@@ -1,16 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 
-export default function Home({ navigation }) {
+export default function Home() {
 	return (
 		<>
-			<View style={{ flexDirection: "row" }}>
-				<Pressable style={[Styles.button, { marginLeft: 50, marginTop: 10 }]} onPress={() => navigation.navigate("User")}>
-					<Text style={Styles.buttonText}>User</Text>
-				</Pressable>
-				<Pressable style={[Styles.button, { marginLeft: 20, marginTop: 10, backgroundColor: "powderblue" }]} onPress={() => navigation.navigate("Main")}>
-					<Text style={Styles.buttonText}>Calculator</Text>
-				</Pressable>
-			</View>
+			<Text style={Styles.text}>Home</Text>
 		</>
 	);
 }
@@ -26,5 +19,10 @@ const Styles = StyleSheet.create({
 	},
 	buttonText: {
 		fontSize: 25,
+	},
+	text: {
+		margin: "auto",
+		fontSize: 30,
+		fontWeight: "bold",
 	},
 });

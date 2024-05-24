@@ -1,45 +1,104 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, View, SafeAreaView } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
+import Swipeable from "react-native-gesture-handler/Swipeable";
+import "react-native-gesture-handler";
+
+let idCounter = 4;
 
 export default function Index({ navigation, route }) {
 	const user = route.params;
-	const [users, setUsers] = useState([]);
+	const [users, setUsers] = useState([
+		{
+			id: 1,
+			first_name: "raj",
+			last_name: "nayak",
+			age: "21",
+			city: "ahmedabad",
+		},
+		{
+			id: 2,
+			first_name: "jay",
+			last_name: "gajjar",
+			age: "22",
+			city: "kalol",
+		},
+		{
+			id: 3,
+			first_name: "harsh",
+			last_name: "patel",
+			age: "23",
+			city: "kadi",
+		},
+	]);
+
 	useEffect(() => {
-		user != undefined && setUsers([...users, user]);
+		if (user != undefined && user.id == null) {
+			user.id = idCounter;
+			setUsers([...users, user]);
+			idCounter++;
+		} else if (user != undefined && user.id != null) {
+			setUsers(
+				users.map((row) => {
+					return row.id == user.id ? user : row;
+				})
+			);
+		}
 	}, [user]);
+
+	function deleteUser(id) {
+		Alert.alert("Alert Title", "My Alert Msg", [
+			{
+				text: "Cancel",
+				onPress: () => console.log("Cancel Pressed"),
+				style: "cancel",
+			},
+			{ text: "OK", onPress: () => setUsers(users.filter((row) => row.id !== id)) },
+		]);
+	}
 
 	return (
 		<>
-			<View style={{ height: "100%" }}>
-				<View style={{ alignItems: "center", marginBottom: 10, marginTop: 10 }}>
-					<Text style={{ fontSize: 30 }}>User Details</Text>
-				</View>
-				<View style={{ borderWidth: 1, height: "81%", margin: 5, marginBottom: 20, borderRadius: 5 }}>
-					<View style={{ flexDirection: "row" }}>
-						<Text style={Styles.tableHeaderRow}>Sr.No.</Text>
-						<Text style={[Styles.tableHeaderRow, { flex: 1.7 }]}>First Name</Text>
-						<Text style={[Styles.tableHeaderRow, { flex: 1.7 }]}>Last Name</Text>
-						<Text style={Styles.tableHeaderRow}>Age</Text>
-						<Text style={[Styles.tableHeaderRow, { flex: 1.5 }]}>City</Text>
+			<SafeAreaView>
+				<View style={{ height: "100%", marginTop: 15 }}>
+					<View style={{ alignItems: "center", marginBottom: 15 }}>
+						<Text style={{ fontSize: 30 }}>User Details</Text>
 					</View>
-					<FlatList
-						data={users}
-						renderItem={({ item, index }) => (
-							<View style={{ flexDirection: "row" }}>
-								<Text style={Styles.tableRow}>{index + 1}</Text>
-								<Text style={[Styles.tableRow, { flex: 1.5 }]}>{item.first_name}</Text>
-								<Text style={[Styles.tableRow, { flex: 1.5 }]}>{item.last_name}</Text>
-								<Text style={Styles.tableRow}>{item.age}</Text>
-								<Text style={[Styles.tableRow, { flex: 1.5 }]}>{item.city}</Text>
-							</View>
-						)}
-					/>
+					<View style={{ height: "79%" }}>
+						<FlatList
+							data={users}
+							renderItem={({ item, index }) => (
+								<ScrollView>
+									<View key={index} style={Styles.card}>
+										<View style={{ width: "50%", paddingLeft: 5 }}>
+											<Text style={[Styles.tableRow, { flex: 1.5 }]}> First Name : {item.first_name}</Text>
+
+											<Text style={[Styles.tableRow, { flex: 1.5 }]}>Last Name : {item.last_name}</Text>
+
+											<Text style={Styles.tableRow}>Age : {item.age}</Text>
+
+											<Text style={[Styles.tableRow, { flex: 1.5 }]}>City : {item.city}</Text>
+										</View>
+
+										<View style={{ width: "50%" }}>
+											<Pressable style={[Styles.floatingButton, { position: "absolute", bottom: 20, left: 50 }]} onPress={() => navigation.navigate("pages/user/Form", item)}>
+												<Ionicons name="create-outline" size={23} />
+											</Pressable>
+
+											<Pressable style={[Styles.floatingButton, { position: "absolute", bottom: 20, right: 20, backgroundColor: "red" }]} onPress={() => deleteUser(item.id)}>
+												<Ionicons name="trash-outline" size={23} />
+											</Pressable>
+										</View>
+									</View>
+								</ScrollView>
+							)}
+						/>
+					</View>
+					<Pressable style={({ pressed }) => [pressed ? Styles.floatingButton : Styles.floatingButtonPressed]} onPress={() => navigation.navigate("pages/user/Form")}>
+						{({ pressed }) => <Ionicons name="person-add" size={pressed ? 23 : 28} />}
+					</Pressable>
 				</View>
-				<Pressable style={({ pressed }) => [pressed ? Styles.floatingButton : Styles.floatingButtonPressed]} onPress={() => navigation.navigate("User Form")}>
-					{({ pressed }) => <Ionicons name="person-add" size={pressed ? 23 : 28} />}
-				</Pressable>
-			</View>
+			</SafeAreaView>
 		</>
 	);
 }
@@ -53,9 +112,10 @@ const Styles = StyleSheet.create({
 		borderRadius: 40,
 		backgroundColor: "#5AB2FF",
 		position: "absolute",
-		bottom: 15,
+		bottom: 45,
 		right: 15,
 	},
+
 	floatingButtonPressed: {
 		alignItems: "center",
 		justifyContent: "center",
@@ -64,12 +124,26 @@ const Styles = StyleSheet.create({
 		borderRadius: 40,
 		backgroundColor: "skyblue",
 		position: "absolute",
-		bottom: 10,
+		bottom: 40,
 		right: 10,
 	},
+
 	buttonText: {
 		fontSize: 20,
 	},
-	tableRow: { fontSize: 15, flex: 1, textAlign: "center" },
-	tableHeaderRow: { fontWeight: "bold", fontSize: 15, flex: 1, textAlign: "center" },
+
+	tableRow: {
+		fontSize: 15,
+		margin: 3,
+	},
+
+	card: {
+		borderWidth: 1,
+		borderRadius: 15,
+		marginBottom: 5,
+		marginLeft: 10,
+		marginRight: 10,
+		flexDirection: "row",
+		backgroundColor: "#EEF7FF",
+	},
 });
