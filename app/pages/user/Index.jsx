@@ -69,23 +69,23 @@ export default function Index({ navigation, route }) {
 							data={users}
 							renderItem={({ item, index }) => (
 								<ScrollView>
-									<View key={index} style={Styles.card}>
+									<View key={index} style={styles.card}>
 										<View style={{ width: "50%", paddingLeft: 5 }}>
-											<Text style={[Styles.tableRow, { flex: 1.5 }]}> First Name : {item.first_name}</Text>
+											<Text style={[styles.tableRow, { flex: 1.5 }]}> First Name : {item.first_name}</Text>
 
-											<Text style={[Styles.tableRow, { flex: 1.5 }]}>Last Name : {item.last_name}</Text>
+											<Text style={[styles.tableRow, { flex: 1.5 }]}>Last Name : {item.last_name}</Text>
 
-											<Text style={Styles.tableRow}>Age : {item.age}</Text>
+											<Text style={styles.tableRow}>Age : {item.age}</Text>
 
-											<Text style={[Styles.tableRow, { flex: 1.5 }]}>City : {item.city}</Text>
+											<Text style={[styles.tableRow, { flex: 1.5 }]}>City : {item.city}</Text>
 										</View>
 
 										<View style={{ width: "50%" }}>
-											<Pressable style={[Styles.floatingButton, { position: "absolute", bottom: 20, left: 50 }]} onPress={() => navigation.navigate("pages/user/Form", item)}>
+											<Pressable style={[styles.floatingButton, { position: "absolute", bottom: 20, left: 50 }]} onPress={() => navigation.navigate("pages/user/Form", item)}>
 												<Ionicons name="create-outline" size={23} />
 											</Pressable>
 
-											<Pressable style={[Styles.floatingButton, { position: "absolute", bottom: 20, right: 20, backgroundColor: "red" }]} onPress={() => deleteUser(item.id)}>
+											<Pressable style={[styles.floatingButton, { position: "absolute", bottom: 20, right: 20, backgroundColor: "red" }]} onPress={() => deleteUser(item.id)}>
 												<Ionicons name="trash-outline" size={23} />
 											</Pressable>
 										</View>
@@ -94,7 +94,7 @@ export default function Index({ navigation, route }) {
 							)}
 						/>
 					</View>
-					<Pressable style={({ pressed }) => [pressed ? Styles.floatingButton : Styles.floatingButtonPressed]} onPress={() => navigation.navigate("pages/user/Form")}>
+					<Pressable style={({ pressed }) => [pressed ? styles.floatingButton : styles.floatingButtonPressed]} onPress={() => navigation.navigate("pages/user/Form")}>
 						{({ pressed }) => <Ionicons name="person-add" size={pressed ? 23 : 28} />}
 					</Pressable>
 				</View>
@@ -103,7 +103,7 @@ export default function Index({ navigation, route }) {
 	);
 }
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
 	floatingButton: {
 		alignItems: "center",
 		justifyContent: "center",

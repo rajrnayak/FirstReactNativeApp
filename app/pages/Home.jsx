@@ -3,12 +3,12 @@ import { StyleSheet, Text } from "react-native";
 export default function Home() {
 	return (
 		<>
-			<Text style={Styles.text}>Home</Text>
+			<Text style={styles.text}>Home</Text>
 		</>
 	);
 }
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
 	button: {
 		backgroundColor: "skyblue",
 		width: 140,

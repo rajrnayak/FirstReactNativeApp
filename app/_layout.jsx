@@ -9,8 +9,10 @@ import Home from "./pages/Home.jsx";
 import Main from "./pages/Main.jsx";
 import Index from "./pages/user/Index.jsx";
 import Form from "./pages/user/Form.jsx";
+import ToDoIndex from "./pages/todo-list/Index.jsx";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import "react-native-gesture-handler";
+import { StyleSheet } from "react-native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -37,7 +39,8 @@ export default function RootLayout() {
 	function Root() {
 		return (
 			<Drawer.Navigator initialRouteName="pages/Home">
-				<Drawer.Screen name="pages/Home" component={Home} options={{ title: "Home" }} />
+				<Drawer.Screen name="pages/Home" component={Home} options={styles.home} />
+				<Drawer.Screen name="pages/todo-list/Index" component={ToDoIndex} options={styles.task} />
 				<Drawer.Screen name="pages/user/Index" component={Index} options={{ title: "User" }} />
 				<Drawer.Screen name="pages/Main" component={Main} options={{ title: "Calculator" }} />
 			</Drawer.Navigator>
@@ -55,3 +58,30 @@ export default function RootLayout() {
 		</>
 	);
 }
+
+const styles = StyleSheet.create({
+	home: {
+		title: "Home",
+		headerStyle: {
+			backgroundColor: "#f4511e",
+		},
+		headerTitleAlign: "center",
+		headerTintColor: "#fff",
+		headerTitleStyle: {
+			textAlign: "center",
+			fontWeight: "bold",
+		},
+	},
+	task: {
+		title: "All Tasks",
+		headerStyle: {
+			backgroundColor: "#f4511e",
+		},
+		headerTitleAlign: "center",
+		headerTintColor: "#fff",
+		headerTitleStyle: {
+			textAlign: "center",
+			fontWeight: "bold",
+		},
+	},
+});
