@@ -73,8 +73,8 @@ export default function ToDoIndex({ navigation, route }) {
 										<Text>Task: {item.id}</Text>
 										<Text>Task: {item.task}</Text>
 										<Text>Description : {item.description}</Text>
-										<Text>Task For : {item.usage}</Text>
-										<Text>Date & Time : {item.date_time}</Text>
+										<Text>Task For : {item.use}</Text>
+										<Text>Date & Time : {item.date}</Text>
 										<Pressable style={{ position: "absolute", bottom: 20, right: 60, backgroundColor: "skyblue", padding: 5, borderRadius: 40 }} onPress={() => openModal(item)}>
 											<Ionicons name="create-outline" size={23} />
 										</Pressable>

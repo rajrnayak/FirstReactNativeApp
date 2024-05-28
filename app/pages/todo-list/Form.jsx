@@ -2,20 +2,21 @@ import { StyleSheet, Text, View, Pressable, Modal, TextInput } from "react-nativ
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SQLite from "expo-sqlite";
 
 const Form = forwardRef(function Form({ getAllData }, ref) {
 	const [modalVisible, setModalVisible] = useState(false);
 	const [date, setDate] = useState(new Date());
 	const [field, setField] = useState({
+		id: "",
 		task: "first task",
 		description: "this is first one",
-		usage: "work",
-		date_time: "2024-05-28",
+		use: "work",
+		date: "2024-05-28",
 	});
 
 	const openModal = (task) => {
-		task ? setField(task) : setField({ ...field, date_time: date });
+		task ? setField(task) : setField({ ...field, date: date });
 		setModalVisible(!modalVisible);
 	};
 
@@ -29,7 +30,7 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 	const onChange = (event, selectedDate) => {
 		const currentDate = selectedDate;
 		setDate(currentDate);
-		setField({ ...field, date_time: currentDate });
+		setField({ ...field, date: currentDate });
 	};
 
 	const showMode = (currentMode) => {
@@ -51,13 +52,18 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 
 	const storeData = async (value) => {
 		try {
-			let tasks = await AsyncStorage.getItem("tasks");
-			tasks = tasks ? JSON.parse(tasks) : {};
+			const db = await SQLite.openDatabaseAsync("toDoList");
+			await db.execAsync(`
+			INSERT INTO tasks (task,description,use,date)
+			 VALUES ('${value.task}','${value.description}','${value.use}','${value.date}');`);
+			console.log(await db.getAllAsync("SELECT * FROM tasks"));
 
-			value.id = !value.id ? Date.now() : value.id;
-			tasks[value.id.toString()] = JSON.stringify(value);
-			await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
-			getAllData();
+			// let tasks = await AsyncStorage.getItem("tasks");
+			// tasks = tasks ? JSON.parse(tasks) : {};
+			// value.id = !value.id ? Date.now() : value.id;
+			// tasks[value.id.toString()] = JSON.stringify(value);
+			// await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
+			// getAllData();
 		} catch (e) {
 			console.log(e);
 			console.log("its error in store method.");
@@ -75,8 +81,8 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 			id: "",
 			task: "",
 			description: "",
-			usage: "",
-			date_time: "",
+			use: "",
+			date: "",
 		});
 	};
 
@@ -119,15 +125,15 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 						<Text style={styles.fieldTitle}>Task For :</Text>
 						<Picker
 							style={styles.textInput}
-							selectedValue={field.usage}
+							selectedValue={field.use}
 							onValueChange={(itemValue, itemIndex) => {
-								setField({ ...field, usage: itemValue });
+								setField({ ...field, use: itemValue });
 							}}>
 							<Picker.Item label="Personal" value="personal" />
 							<Picker.Item label="Work" value="work" />
 						</Picker>
 					</View>
-					<Text style={styles.fieldBox}>selected Date & Time : {field.date_time.toLocaleString()}</Text>
+					<Text style={styles.fieldBox}>selected Date & Time : {field.date.toLocaleString()}</Text>
 					<View style={styles.fieldBox}>
 						<Text style={styles.fieldTitle}>Select Date :</Text>
 						<Pressable style={[styles.dateTimeButton]} onPress={showDatePicker}>
