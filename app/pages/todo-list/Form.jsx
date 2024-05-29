@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, Pressable, Modal, TextInput } from "react-native";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { StyleSheet, Text, View, Pressable, Modal, TextInput, ScrollView, ToastAndroid } from "react-native";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import * as SQLite from "expo-sqlite";
@@ -53,17 +53,16 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 	const storeData = async (value) => {
 		try {
 			const db = await SQLite.openDatabaseAsync("toDoList");
-			await db.execAsync(`
-			INSERT INTO tasks (task,description,use,date)
-			 VALUES ('${value.task}','${value.description}','${value.use}','${value.date}');`);
-			console.log(await db.getAllAsync("SELECT * FROM tasks"));
-
-			// let tasks = await AsyncStorage.getItem("tasks");
-			// tasks = tasks ? JSON.parse(tasks) : {};
-			// value.id = !value.id ? Date.now() : value.id;
-			// tasks[value.id.toString()] = JSON.stringify(value);
-			// await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
-			// getAllData();
+			if (value.id == "") {
+				await db.execAsync(`
+				INSERT INTO tasks (task,description,use,date)
+				VALUES ('${value.task}','${value.description}','${value.use}','${value.date}');`);
+			} else {
+				await db.runAsync(`UPDATE tasks SET task = '${value.task}',description = '${value.description}',use = '${value.use}',date = '${value.date}' WHERE id = ${value.id};`);
+			}
+			getAllData();
+			let msg = value.id == "" ? "New task successfully Created" : "Task successfully Updated.";
+			ToastAndroid.showWithGravity(msg, ToastAndroid.SHORT, ToastAndroid.CENTER);
 		} catch (e) {
 			console.log(e);
 			console.log("its error in store method.");
@@ -96,62 +95,64 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 			}}>
 			<View style={styles.centeredView}>
 				<View style={styles.modalView}>
-					<View style={styles.fieldBox}>
-						<Text style={styles.fieldTitle}>Task :</Text>
-						<TextInput
-							style={styles.textInput}
-							placeholder="What do you want to do?"
-							value={field.task}
-							onChangeText={(text) => {
-								setField({ ...field, task: text });
-							}}
-						/>
-					</View>
-					<View style={styles.fieldBox}>
-						<Text style={styles.fieldTitle}>Description :</Text>
-						<TextInput
-							editable
-							multiline
-							numberOfLines={4}
-							style={styles.textInput}
-							placeholder="Enter your description."
-							value={field.description}
-							onChangeText={(text) => {
-								setField({ ...field, description: text });
-							}}
-						/>
-					</View>
-					<View style={styles.fieldBox}>
-						<Text style={styles.fieldTitle}>Task For :</Text>
-						<Picker
-							style={styles.textInput}
-							selectedValue={field.use}
-							onValueChange={(itemValue, itemIndex) => {
-								setField({ ...field, use: itemValue });
-							}}>
-							<Picker.Item label="Personal" value="personal" />
-							<Picker.Item label="Work" value="work" />
-						</Picker>
-					</View>
-					<Text style={styles.fieldBox}>selected Date & Time : {field.date.toLocaleString()}</Text>
-					<View style={styles.fieldBox}>
-						<Text style={styles.fieldTitle}>Select Date :</Text>
-						<Pressable style={[styles.dateTimeButton]} onPress={showDatePicker}>
-							<Text style={{ textAlign: "center" }}>Select Date</Text>
+					<ScrollView>
+						<View style={styles.fieldBox}>
+							<Text style={styles.fieldTitle}>Task :</Text>
+							<TextInput
+								style={styles.textInput}
+								placeholder="What do you want to do?"
+								value={field.task}
+								onChangeText={(text) => {
+									setField({ ...field, task: text });
+								}}
+							/>
+						</View>
+						<View style={styles.fieldBox}>
+							<Text style={styles.fieldTitle}>Description :</Text>
+							<TextInput
+								editable
+								multiline
+								numberOfLines={4}
+								style={styles.textInput}
+								placeholder="Enter your description."
+								value={field.description}
+								onChangeText={(text) => {
+									setField({ ...field, description: text });
+								}}
+							/>
+						</View>
+						<View style={styles.fieldBox}>
+							<Text style={styles.fieldTitle}>Task For :</Text>
+							<Picker
+								style={styles.textInput}
+								selectedValue={field.use}
+								onValueChange={(itemValue, itemIndex) => {
+									setField({ ...field, use: itemValue });
+								}}>
+								<Picker.Item label="Personal" value="personal" />
+								<Picker.Item label="Work" value="work" />
+							</Picker>
+						</View>
+						<Text style={styles.fieldBox}>selected Date & Time : {field.date.toLocaleString()}</Text>
+						<View style={styles.fieldBox}>
+							<Text style={styles.fieldTitle}>Select Date :</Text>
+							<Pressable style={[styles.dateTimeButton]} onPress={showDatePicker}>
+								<Text style={{ textAlign: "center" }}>Select Date</Text>
+							</Pressable>
+						</View>
+						<View style={styles.fieldBox}>
+							<Text style={styles.fieldTitle}>Select Time :</Text>
+							<Pressable style={[styles.dateTimeButton]} onPress={showTimePicker}>
+								<Text style={{ textAlign: "center" }}>Select Time</Text>
+							</Pressable>
+						</View>
+						<Pressable style={[styles.button, { right: 80 }]} onPress={submit}>
+							<Text style={styles.textStyle}>Submit</Text>
 						</Pressable>
-					</View>
-					<View style={styles.fieldBox}>
-						<Text style={styles.fieldTitle}>Select Time :</Text>
-						<Pressable style={[styles.dateTimeButton]} onPress={showTimePicker}>
-							<Text style={{ textAlign: "center" }}>Select Time</Text>
+						<Pressable style={[styles.button, { backgroundColor: "lightgrey" }]} onPress={closeModal}>
+							<Text style={[styles.textStyle, { color: "black" }]}>Cancel</Text>
 						</Pressable>
-					</View>
-					<Pressable style={[styles.button, { right: 90 }]} onPress={submit}>
-						<Text style={styles.textStyle}>Submit</Text>
-					</Pressable>
-					<Pressable style={[styles.button, { backgroundColor: "lightgrey" }]} onPress={closeModal}>
-						<Text style={[styles.textStyle, { color: "black" }]}>Cancel</Text>
-					</Pressable>
+					</ScrollView>
 				</View>
 			</View>
 		</Modal>
@@ -159,24 +160,6 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 });
 
 export default Form;
-
-// else {
-// 	let tasksArr = [];
-
-// 	Object.keys(tasks).forEach(function (key) {
-// 		tasksArr.push(JSON.parse(tasks[key]));
-// 	});
-
-// 	tasksArr = tasksArr.map((row) => {
-// 		if (row.id == field.id) {
-// 			return field;
-// 		} else {
-// 			return row;
-// 		}
-// 	});
-
-// 	await AsyncStorage.setItem("tasks", tasksArr);
-// }
 
 const styles = StyleSheet.create({
 	centeredView: {
@@ -189,7 +172,7 @@ const styles = StyleSheet.create({
 
 	modalView: {
 		width: "98%",
-		height: "80%",
+		height: "70%",
 		backgroundColor: "white",
 		borderRadius: 20,
 		padding: 30,
@@ -210,8 +193,8 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		borderRadius: 20,
 		position: "absolute",
-		bottom: 20,
-		right: 15,
+		bottom: 12,
+		right: 0,
 	},
 
 	textStyle: {

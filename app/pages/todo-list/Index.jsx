@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, SafeAreaView, Pressable, ScrollView, FlatList, Button } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, Pressable, ScrollView, FlatList, Alert, ToastAndroid } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,19 +16,8 @@ export default function ToDoIndex({ navigation, route }) {
 
 	const getAllData = async () => {
 		try {
-			const keys = await AsyncStorage.getAllKeys();
-			const rows = await AsyncStorage.multiGet(keys);
-
-			let tasks = await AsyncStorage.getItem("tasks");
-			tasks = tasks ? JSON.parse(tasks) : {};
-
-			let tasksArr = [];
-
-			Object.keys(tasks).forEach(function (key) {
-				tasksArr.push(JSON.parse(tasks[key]));
-			});
-
-			setData(tasksArr);
+			const db = await SQLite.openDatabaseAsync("toDoList");
+			setData(await db.getAllAsync("SELECT * FROM tasks"));
 		} catch (e) {
 			console.log("its error in get all data method.");
 		}
@@ -36,11 +25,21 @@ export default function ToDoIndex({ navigation, route }) {
 
 	const destroyData = async (id) => {
 		try {
-			let tasks = await AsyncStorage.getItem("tasks");
-			tasks = tasks ? JSON.parse(tasks) : {};
-			delete tasks[id];
-			await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
-			getAllData();
+			Alert.alert("Delete Task!", "Are you sure you want to delete this task?", [
+				{
+					text: "Cancel",
+					style: "cancel",
+				},
+				{
+					text: "OK",
+					onPress: async () => {
+						const db = await SQLite.openDatabaseAsync("toDoList");
+						await db.runAsync(`DELETE FROM tasks WHERE id = ${id}`);
+						getAllData();
+						ToastAndroid.showWithGravity("Task successfully deleted.", ToastAndroid.SHORT, ToastAndroid.CENTER);
+					},
+				},
+			]);
 		} catch (e) {
 			console.log("its error in destroy method.");
 		}
