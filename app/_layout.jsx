@@ -5,14 +5,14 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import "react-native-gesture-handler";
+import { StyleSheet } from "react-native";
 import Home from "./pages/Home.jsx";
 import Main from "./pages/Main.jsx";
 import Index from "./pages/user/Index.jsx";
 import Form from "./pages/user/Form.jsx";
 import ToDoIndex from "./pages/todo-list/Index.jsx";
-import { createDrawerNavigator } from "@react-navigation/drawer";
-import "react-native-gesture-handler";
-import { StyleSheet } from "react-native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

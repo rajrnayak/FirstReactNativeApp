@@ -1,23 +1,39 @@
-import { StyleSheet, Text, View, Pressable, Modal, TextInput, ScrollView, ToastAndroid } from "react-native";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { StyleSheet, Text, View, Pressable, Modal, TextInput, ScrollView, ToastAndroid, FlatList } from "react-native";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import * as SQLite from "expo-sqlite";
+import ToDoListDatabase from "../TodoListDataBase";
 
 const Form = forwardRef(function Form({ getAllData }, ref) {
 	const [modalVisible, setModalVisible] = useState(false);
 	const [date, setDate] = useState(new Date());
+	const [categories, setCategories] = useState([]);
 	const [field, setField] = useState({
 		id: "",
 		task: "first task",
 		description: "this is first one",
-		use: "work",
-		date: "2024-05-28",
+		category_id: "",
+		status: "",
+		date: "",
 	});
 
 	const openModal = (task) => {
-		task ? setField(task) : setField({ ...field, date: date });
+		getCategories();
+		if (task) {
+			delete task.category_name;
+			setField(task);
+		} else {
+			setField({ ...field, date: date });
+		}
 		setModalVisible(!modalVisible);
+	};
+
+	const getCategories = async () => {
+		const db = await SQLite.openDatabaseAsync("toDoList");
+
+		setCategories(await db.getAllAsync(`SELECT * FROM categories`));
 	};
 
 	useImperativeHandle(ref, () => {
@@ -52,17 +68,14 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 
 	const storeData = async (value) => {
 		try {
-			const db = await SQLite.openDatabaseAsync("toDoList");
-			if (value.id == "") {
-				await db.execAsync(`
-				INSERT INTO tasks (task,description,use,date)
-				VALUES ('${value.task}','${value.description}','${value.use}','${value.date}');`);
-			} else {
-				await db.runAsync(`UPDATE tasks SET task = '${value.task}',description = '${value.description}',use = '${value.use}',date = '${value.date}' WHERE id = ${value.id};`);
+			value.date = new Date(value.date).toISOString().slice(0, 10);
+			let toDoDB = new ToDoListDatabase();
+			let response = await toDoDB.manageTask(value);
+
+			if (response.message) {
+				await getAllData();
+				ToastAndroid.showWithGravity(response.message, ToastAndroid.SHORT, ToastAndroid.CENTER);
 			}
-			getAllData();
-			let msg = value.id == "" ? "New task successfully Created" : "Task successfully Updated.";
-			ToastAndroid.showWithGravity(msg, ToastAndroid.SHORT, ToastAndroid.CENTER);
 		} catch (e) {
 			console.log(e);
 			console.log("its error in store method.");
@@ -76,13 +89,14 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 
 	const closeModal = () => {
 		setModalVisible(!modalVisible);
-		setField({
-			id: "",
-			task: "",
-			description: "",
-			use: "",
-			date: "",
-		});
+		// setField({
+		// 	id: "",
+		// 	task: "",
+		// 	description: "",
+		// 	category_id: "",
+		// 	status: "",
+		// 	date: "",
+		// });
 	};
 
 	return (
@@ -125,13 +139,26 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 							<Text style={styles.fieldTitle}>Task For :</Text>
 							<Picker
 								style={styles.textInput}
-								selectedValue={field.use}
+								selectedValue={field.category_id}
 								onValueChange={(itemValue, itemIndex) => {
-									setField({ ...field, use: itemValue });
+									setField({ ...field, category_id: itemValue });
 								}}>
-								<Picker.Item label="Personal" value="personal" />
-								<Picker.Item label="Work" value="work" />
+								<Picker.Item label="Select Any One" value="" />
+								{categories.map((item, index) => (
+									<Picker.Item key={index} label={item.name} value={item.id} />
+								))}
 							</Picker>
+						</View>
+						<View style={styles.fieldBox}>
+							<Text style={styles.fieldTitle}>Status :</Text>
+							<SegmentedControl
+								style={[styles.textInput, { padding: 0, height: 40 }]}
+								values={["To Do", "In Progress", "Done"]}
+								selectedIndex={field.status}
+								onChange={(event) => {
+									setField({ ...field, status: event.nativeEvent.selectedSegmentIndex });
+								}}
+							/>
 						</View>
 						<Text style={styles.fieldBox}>selected Date & Time : {field.date.toLocaleString()}</Text>
 						<View style={styles.fieldBox}>
@@ -172,7 +199,7 @@ const styles = StyleSheet.create({
 
 	modalView: {
 		width: "98%",
-		height: "70%",
+		height: "81%",
 		backgroundColor: "white",
 		borderRadius: 20,
 		padding: 30,

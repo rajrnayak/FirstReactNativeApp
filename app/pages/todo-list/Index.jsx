@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SQLite from "expo-sqlite";
 import Form from "./Form.jsx";
+import { Swipeable } from "react-native-gesture-handler";
+import ToDoListDatabase from "../TodoListDataBase.js";
 
 export default function ToDoIndex({ navigation, route }) {
 	const [data, setData] = useState([]);
@@ -17,7 +19,12 @@ export default function ToDoIndex({ navigation, route }) {
 	const getAllData = async () => {
 		try {
 			const db = await SQLite.openDatabaseAsync("toDoList");
-			setData(await db.getAllAsync("SELECT * FROM tasks"));
+			let query = await db.getAllAsync(`
+			SELECT tasks.*, categories.name as category_name
+			FROM tasks 
+			LEFT JOIN categories ON tasks.category_id = categories.id
+			`);
+			setData(query);
 		} catch (e) {
 			console.log("its error in get all data method.");
 		}
@@ -33,10 +40,14 @@ export default function ToDoIndex({ navigation, route }) {
 				{
 					text: "OK",
 					onPress: async () => {
-						const db = await SQLite.openDatabaseAsync("toDoList");
-						await db.runAsync(`DELETE FROM tasks WHERE id = ${id}`);
-						getAllData();
-						ToastAndroid.showWithGravity("Task successfully deleted.", ToastAndroid.SHORT, ToastAndroid.CENTER);
+						let toDoDB = new ToDoListDatabase();
+
+						let response = await toDoDB.destroyTask(id);
+
+						if (response.message) {
+							await getAllData();
+							ToastAndroid.showWithGravity(response.message, ToastAndroid.SHORT, ToastAndroid.CENTER);
+						}
 					},
 				},
 			]);
@@ -68,20 +79,33 @@ export default function ToDoIndex({ navigation, route }) {
 							data={data}
 							renderItem={({ item, index }) => (
 								<ScrollView>
-									<View style={{ borderWidth: 2, borderColor: "#FF6400", borderRadius: 10, marginTop: 10, padding: 20, gap: 5, backgroundColor: "white" }}>
-										<Text>Task: {item.id}</Text>
-										<Text>Task: {item.task}</Text>
-										<Text>Description : {item.description}</Text>
-										<Text>Task For : {item.use}</Text>
-										<Text>Date & Time : {item.date}</Text>
-										<Pressable style={{ position: "absolute", bottom: 20, right: 60, backgroundColor: "skyblue", padding: 5, borderRadius: 40 }} onPress={() => openModal(item)}>
-											<Ionicons name="create-outline" size={23} />
-										</Pressable>
-
-										<Pressable style={{ position: "absolute", bottom: 20, right: 10, backgroundColor: "skyblue", padding: 5, borderRadius: 40 }} onPress={() => destroyData(item.id)}>
-											<Ionicons name="trash-outline" size={23} />
-										</Pressable>
-									</View>
+									<Swipeable
+										renderLeftActions={() => (
+											<Pressable
+												style={[styles.swipePressable, { backgroundColor: "#1ab52e" }]}
+												onPress={() => {
+													openModal(item);
+												}}>
+												<Ionicons style={styles.swipeIcon} name="create-outline" size={30} color={styles.swipeIconColor} />
+											</Pressable>
+										)}
+										renderRightActions={() => (
+											<Pressable
+												style={[styles.swipePressable, { backgroundColor: "#FF0000" }]}
+												onPress={() => {
+													destroyData(item.id);
+												}}>
+												<Ionicons style={styles.swipeIcon} name="trash-outline" size={30} color={styles.swipeIconColor} />
+											</Pressable>
+										)}>
+										<View style={{ borderWidth: 2, borderColor: "#FF6400", borderRadius: 10, marginTop: 10, padding: 20, gap: 5, backgroundColor: "white" }}>
+											<Text>Task: {item.task}</Text>
+											<Text>Description : {item.description}</Text>
+											<Text>Task Category : {item.category_name}</Text>
+											<Text>Status : {(item.status == 0 && "To Do") || (item.status == 1 && "In Progress") || (item.status == 2 && "Done")}</Text>
+											<Text>Date & Time : {item.date}</Text>
+										</View>
+									</Swipeable>
 								</ScrollView>
 							)}
 						/>
@@ -119,5 +143,20 @@ const styles = StyleSheet.create({
 		position: "absolute",
 		bottom: 10,
 		right: 10,
+	},
+
+	swipePressable: {
+		marginTop: 10,
+		width: "30%",
+		height: "auto",
+		borderRadius: 10,
+	},
+
+	swipeIcon: {
+		margin: "auto",
+	},
+
+	swipeIconColor: {
+		color: "white",
 	},
 });

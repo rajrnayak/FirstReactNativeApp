@@ -1,29 +1,29 @@
-import { StyleSheet, Text } from "react-native";
-import { useEffect } from "react";
-import * as SQLite from "expo-sqlite";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Swipeable } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
+import ToDoListDatabase from "./TodoListDataBase.js";
 
 export default function Home() {
+	const [tasksData, setTasksData] = useState({});
+
 	useEffect(() => {
-		dataBase();
+		let toDoDB = new ToDoListDatabase();
+		// toDoDB.dropTables();
+		toDoDB.createCategoriesTable();
+		toDoDB.createTaskTable();
+		getTasksData();
 	}, []);
 
-	const dataBase = async () => {
-		const db = await SQLite.openDatabaseAsync("toDoList");
-		await db.execAsync(`
-			PRAGMA journal_mode = WAL;
-			CREATE TABLE IF NOT EXISTS tasks (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				task VARCHAR(30) NOT NULL,
-				description VARCHAR(150) NOT NULL,
-				use VARCHAR(20) NOT NULL,
-				date DATETIME(30) NOT NULL
-			);
-		`);
+	const getTasksData = async () => {
+		let toDoDB = new ToDoListDatabase();
+		let data = await toDoDB.getTasks();
+		setTasksData(data);
 	};
 
 	return (
 		<>
-			<Text style={styles.text}>Home</Text>
+			<View style={{ flex: 1, borderWidth: 1, borderColor: "#FF6400", margin: 10 }}></View>
 		</>
 	);
 }

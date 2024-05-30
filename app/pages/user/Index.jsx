@@ -50,7 +50,6 @@ export default function Index({ navigation, route }) {
 		Alert.alert("Alert Title", "My Alert Msg", [
 			{
 				text: "Cancel",
-				onPress: () => console.log("Cancel Pressed"),
 				style: "cancel",
 			},
 			{ text: "OK", onPress: () => setUsers(users.filter((row) => row.id !== id)) },
