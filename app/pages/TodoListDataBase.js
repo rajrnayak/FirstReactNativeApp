@@ -53,27 +53,54 @@ export default class ToDoListDatabase {
 		`);
 	}
 
-	async getTasks() {
+	async getTasks(limit) {
 		const db = await SQLite.openDatabaseAsync("toDoList");
 
 		const totalTasks = await db.getAllAsync(`select count(*) as count from tasks`);
 
 		const dueTasks = await db.getAllAsync(`
-		select count(*) as count from tasks 
-		WHERE (status = 0 OR status = 1) AND date = (select DATE('now') date)`);
+			SELECT tasks.*, categories.name as category_name
+			FROM tasks 
+			LEFT JOIN categories ON tasks.category_id = categories.id
+			WHERE (status = 0 OR status = 1) AND date = (select DATE('now') date) ${limit ? "" : "LIMIT 2"}
+		`);
 
 		const totalPendingTasks = await db.getAllAsync(`
-		select count(*) as count from tasks 
-		WHERE status = 0 OR status = 1`);
+			select count(*) as count from tasks 
+			WHERE status = 0 OR status = 1
+		`);
 
 		const completeTasks = await db.getAllAsync(`select count(*) as count from tasks where status = 2`);
 
 		return {
 			totalTasks: totalTasks[0].count,
-			DueTasks: dueTasks[0].count,
+			dueTasks: dueTasks,
 			totalPendingTasks: totalPendingTasks[0].count,
 			completeTasks: completeTasks[0].count,
 		};
+	}
+
+	async getAllTasks() {
+		const db = await SQLite.openDatabaseAsync("toDoList");
+		let result = await db.getAllAsync(`
+			SELECT tasks.*, categories.name as category_name
+			FROM tasks 
+			LEFT JOIN categories ON tasks.category_id = categories.id
+		`);
+
+		return result;
+	}
+
+	async getAllTasksByCategory(id) {
+		const db = await SQLite.openDatabaseAsync("toDoList");
+		let result = await db.getAllAsync(`
+			SELECT tasks.*, categories.name as category_name
+			FROM tasks 
+			LEFT JOIN categories ON tasks.category_id = categories.id
+			WHERE tasks.category_id = ${id}
+		`);
+
+		return result;
 	}
 
 	async manageTask(task) {
@@ -113,6 +140,19 @@ export default class ToDoListDatabase {
 			`);
 
 		return result;
+	}
+
+	async completeTask(id) {
+		const db = await SQLite.openDatabaseAsync("toDoList");
+
+		let taskObj = await db.getFirstAsync(`
+			UPDATE tasks SET status = '2' WHERE id = ${id} RETURNING *;
+		`);
+
+		return {
+			task: taskObj,
+			message: `Task '${taskObj.task}' is Completed.`,
+		};
 	}
 
 	async destroyTask(id) {

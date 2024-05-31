@@ -7,26 +7,42 @@ import Form from "./Form.jsx";
 import { Swipeable } from "react-native-gesture-handler";
 import ToDoListDatabase from "../TodoListDataBase.js";
 
-export default function ToDoIndex({ navigation, route }) {
+export default function ToDoIndex() {
 	const [data, setData] = useState([]);
 
 	const modalRef = useRef(null);
 
 	useEffect(() => {
+		messageShowing();
 		getAllData();
 	}, []);
 
-	const getAllData = async () => {
+	const messageShowing = async () => {
 		try {
-			const db = await SQLite.openDatabaseAsync("toDoList");
-			let query = await db.getAllAsync(`
-			SELECT tasks.*, categories.name as category_name
-			FROM tasks 
-			LEFT JOIN categories ON tasks.category_id = categories.id
-			`);
-			setData(query);
+			await ToastAndroid.showWithGravity("Swipe left to Delete the Task And...", ToastAndroid.SHORT, ToastAndroid.CENTER);
+			ToastAndroid.showWithGravity("Swipe right to Edit the Task", ToastAndroid.SHORT, ToastAndroid.CENTER);
 		} catch (e) {
 			console.log("its error in get all data method.");
+		}
+	};
+
+	const getAllData = async () => {
+		try {
+			let toDoDB = new ToDoListDatabase();
+			let response = await toDoDB.getAllTasks();
+			setData(response);
+		} catch (e) {
+			console.log("its error in get all data method.");
+		}
+	};
+
+	const getTasksByCategory = async (category_id) => {
+		try {
+			let toDoDB = new ToDoListDatabase();
+			let response = await toDoDB.getAllTasksByCategory(category_id);
+			setData(response);
+		} catch (e) {
+			console.log("its error in get all data bu category method.");
 		}
 	};
 
@@ -56,68 +72,86 @@ export default function ToDoIndex({ navigation, route }) {
 		}
 	};
 
-	const clearData = async () => {
-		try {
-			await AsyncStorage.clear();
-			setData([]);
-		} catch (e) {
-			console.log("its error in clear method.");
-		}
-	};
-
 	const openModal = (task) => {
 		modalRef.current.openModal(task);
 	};
 
 	return (
 		<>
-			<SafeAreaView>
-				<View style={{ height: "100%" }}>
-					{/* <Button onPress={() => clearData()} title="button" /> */}
-					<View style={{ height: "90%", padding: 10 }}>
-						<FlatList
-							data={data}
-							renderItem={({ item, index }) => (
-								<ScrollView>
-									<Swipeable
-										renderLeftActions={() => (
-											<Pressable
-												style={[styles.swipePressable, { backgroundColor: "#1ab52e" }]}
-												onPress={() => {
-													openModal(item);
-												}}>
-												<Ionicons style={styles.swipeIcon} name="create-outline" size={30} color={styles.swipeIconColor} />
-											</Pressable>
-										)}
-										renderRightActions={() => (
-											<Pressable
-												style={[styles.swipePressable, { backgroundColor: "#FF0000" }]}
-												onPress={() => {
-													destroyData(item.id);
-												}}>
-												<Ionicons style={styles.swipeIcon} name="trash-outline" size={30} color={styles.swipeIconColor} />
-											</Pressable>
-										)}>
-										<View style={{ borderWidth: 2, borderColor: "#FF6400", borderRadius: 10, marginTop: 10, padding: 20, gap: 5, backgroundColor: "white" }}>
-											<Text>Task: {item.task}</Text>
-											<Text>Description : {item.description}</Text>
-											<Text>Task Category : {item.category_name}</Text>
-											<Text>Status : {(item.status == 0 && "To Do") || (item.status == 1 && "In Progress") || (item.status == 2 && "Done")}</Text>
-											<Text>Date & Time : {item.date}</Text>
-										</View>
-									</Swipeable>
-								</ScrollView>
-							)}
-						/>
-					</View>
-					<Pressable style={({ pressed }) => [pressed ? styles.floatingButton : styles.floatingButtonPressed]} onPress={() => openModal()}>
-						{({ pressed }) => <Ionicons name={pressed ? "create" : "create-outline"} size={pressed ? 23 : 28} style={{ color: "white" }} />}
-					</Pressable>
-					<Form ref={modalRef} getAllData={getAllData} />
+			<SafeAreaView style={{ flex: 1, padding: 5 }}>
+				<View style={{ padding: 5, flex: 1 }}>
+					<ScrollView horizontal={true}>
+						<Pressable onPress={() => getAllData()} style={[styles.categoryButton, { backgroundColor: "#FFC96F" }]}>
+							<Text style={{ fontSize: 20 }}>All</Text>
+						</Pressable>
+						<Pressable onPress={() => getTasksByCategory(1)} style={[styles.categoryButton, { backgroundColor: "#A0DEFF" }]}>
+							<Text style={{ fontSize: 20 }}>Personal</Text>
+						</Pressable>
+						<Pressable onPress={() => getTasksByCategory(2)} style={[styles.categoryButton, { backgroundColor: "#B0EBB4" }]}>
+							<Text style={{ fontSize: 20 }}>Work</Text>
+						</Pressable>
+						<Pressable onPress={() => getTasksByCategory(3)} style={[styles.categoryButton, { backgroundColor: "#BED7DC" }]}>
+							<Text style={{ fontSize: 20 }}>Daily Routine</Text>
+						</Pressable>
+						<Pressable style={[styles.categoryButton, { backgroundColor: "#DCBFFF" }]}>
+							<Text style={{ fontSize: 20 }}>ETC...</Text>
+						</Pressable>
+					</ScrollView>
 				</View>
+				<View style={{ flex: 12 }}>
+					<FlatList
+						data={data}
+						renderItem={({ item, index }) => (
+							<ScrollView>
+								<Swipeable
+									renderLeftActions={() => (
+										<Pressable
+											style={[styles.swipePressable, { backgroundColor: "#1ab52e" }]}
+											onPress={() => {
+												openModal(item);
+											}}>
+											<Ionicons style={styles.swipeIcon} name="create-outline" size={30} color={styles.swipeIconColor} />
+										</Pressable>
+									)}
+									renderRightActions={() => (
+										<Pressable
+											style={[styles.swipePressable, { backgroundColor: "#FF0000" }]}
+											onPress={() => {
+												destroyData(item.id);
+											}}>
+											<Ionicons style={styles.swipeIcon} name="trash-outline" size={30} color={styles.swipeIconColor} />
+										</Pressable>
+									)}>
+									<View style={{ borderWidth: 2, borderColor: "#FF6400", borderRadius: 10, marginTop: 10, padding: 10, gap: 5, backgroundColor: "white" }}>
+										<Text style={styles.cardTaskName}>{item.task}</Text>
+
+										<Text>Task Category : {item.category_name}</Text>
+
+										<View style={{ flexDirection: "row" }}>
+											<Text>Status : </Text>
+											<TaskStatus status={item.status} />
+										</View>
+
+										<Text>Description : {item.description}</Text>
+
+										<Text style={styles.cardDate}>{new Date(item.date).toDateString()}</Text>
+									</View>
+								</Swipeable>
+							</ScrollView>
+						)}
+					/>
+				</View>
+				<Pressable style={({ pressed }) => [pressed ? styles.floatingButton : styles.floatingButtonPressed]} onPress={() => openModal()}>
+					{({ pressed }) => <Ionicons name={pressed ? "create" : "create-outline"} size={pressed ? 23 : 28} style={{ color: "white" }} />}
+				</Pressable>
 			</SafeAreaView>
+			<Form ref={modalRef} getAllData={getAllData} />
 		</>
 	);
+}
+
+function TaskStatus({ status }) {
+	return <Text style={[styles.statusText, { borderColor: (status == 0 && "skyblue") || (status == 1 && "orange") || (status == 2 && "lightgreen") }]}>{(status == 0 && "To Do") || (status == 1 && "In Progress") || (status == 2 && "Completed")}</Text>;
 }
 
 const styles = StyleSheet.create({
@@ -158,5 +192,36 @@ const styles = StyleSheet.create({
 
 	swipeIconColor: {
 		color: "white",
+	},
+
+	cardDate: {
+		position: "absolute",
+		right: 5,
+		top: 5,
+	},
+
+	cardTaskName: {
+		fontSize: 22,
+		fontWeight: "bold",
+	},
+
+	statusView: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
+
+	statusText: {
+		borderWidth: 2,
+		marginLeft: 5,
+		padding: 3,
+		borderRadius: 5,
+		textAlign: "center",
+		justifyContent: "center",
+	},
+
+	categoryButton: {
+		padding: 10,
+		borderRadius: 5,
+		margin: 5,
 	},
 });

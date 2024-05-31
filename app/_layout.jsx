@@ -3,7 +3,6 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import "react-native-gesture-handler";
@@ -21,7 +20,6 @@ const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
 export default function RootLayout() {
-	const colorScheme = useColorScheme();
 	const [loaded] = useFonts({
 		SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
 	});
@@ -71,7 +69,9 @@ const styles = StyleSheet.create({
 			textAlign: "center",
 			fontWeight: "bold",
 		},
+		unmountOnBlur: true,
 	},
+
 	task: {
 		title: "All Tasks",
 		headerStyle: {
@@ -83,5 +83,6 @@ const styles = StyleSheet.create({
 			textAlign: "center",
 			fontWeight: "bold",
 		},
+		unmountOnBlur: true,
 	},
 });
