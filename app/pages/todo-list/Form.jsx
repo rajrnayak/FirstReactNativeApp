@@ -1,39 +1,58 @@
-import { StyleSheet, Text, View, Pressable, Modal, TextInput, ScrollView, ToastAndroid, FlatList } from "react-native";
+import { StyleSheet, Text, View, Pressable, Modal, TextInput, ScrollView, ToastAndroid } from "react-native";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import * as SQLite from "expo-sqlite";
 import ToDoListDatabase from "../TodoListDataBase";
+import { useForm, Controller } from "react-hook-form";
 
 const Form = forwardRef(function Form({ getAllData }, ref) {
 	const [modalVisible, setModalVisible] = useState(false);
 	const [date, setDate] = useState(new Date());
 	const [categories, setCategories] = useState([]);
-	const [field, setField] = useState({
-		id: "",
-		task: "first task",
-		description: "this is first one",
-		category_id: "",
-		status: "",
-		date: "",
+	const {
+		control,
+		handleSubmit,
+		reset,
+		setValue,
+		formState: { errors },
+	} = useForm({
+		defaultValues: {
+			id: "",
+			task: "",
+			description: "",
+			category_id: "",
+			status: "",
+			date: "",
+		},
 	});
 
-	const openModal = (task) => {
+	useEffect(() => {
 		getCategories();
+	}, []);
+
+	const openModal = (task) => {
 		if (task) {
 			delete task.category_name;
-			setField(task);
+			console.log(task);
+			setValue("id", task.id);
+			setValue("task", task.task);
+			setValue("description", task.description);
+			setValue("category_id", task.category_id);
+			setValue("status", task.status);
+			setValue("date", task.date);
+			setDate(new Date(task.date));
 		} else {
-			setField({ ...field, date: date });
+			setDate(new Date());
 		}
 		setModalVisible(!modalVisible);
 	};
 
 	const getCategories = async () => {
-		const db = await SQLite.openDatabaseAsync("toDoList");
-
-		setCategories(await db.getAllAsync(`SELECT * FROM categories`));
+		let toDoDB = new ToDoListDatabase();
+		let response = await toDoDB.getCategories();
+		setCategories(response);
 	};
 
 	useImperativeHandle(ref, () => {
@@ -46,7 +65,6 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 	const onChange = (event, selectedDate) => {
 		const currentDate = selectedDate;
 		setDate(currentDate);
-		setField({ ...field, date: currentDate });
 	};
 
 	const showMode = (currentMode) => {
@@ -66,14 +84,15 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 		showMode("time");
 	};
 
-	const storeData = async (value) => {
+	const storeData = async (task) => {
 		try {
-			value.date = new Date(value.date).toISOString().slice(0, 10);
+			task.date = new Date(date).toISOString().slice(0, 10);
 			let toDoDB = new ToDoListDatabase();
-			let response = await toDoDB.manageTask(value);
+			let response = await toDoDB.manageTask(task);
 
 			if (response.message) {
 				await getAllData();
+				closeModal();
 				ToastAndroid.showWithGravity(response.message, ToastAndroid.SHORT, ToastAndroid.CENTER);
 			}
 		} catch (e) {
@@ -82,21 +101,14 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 		}
 	};
 
-	const submit = () => {
-		storeData(field);
-		closeModal();
+	const submit = (task) => {
+		storeData(task);
 	};
 
 	const closeModal = () => {
 		setModalVisible(!modalVisible);
-		// setField({
-		// 	id: "",
-		// 	task: "",
-		// 	description: "",
-		// 	category_id: "",
-		// 	status: "",
-		// 	date: "",
-		// });
+		reset();
+		setDate("");
 	};
 
 	return (
@@ -112,74 +124,75 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 					<ScrollView>
 						<View style={styles.fieldBox}>
 							<Text style={styles.fieldTitle}>Task :</Text>
-							<TextInput
-								style={styles.textInput}
-								placeholder="What do you want to do?"
-								value={field.task}
-								onChangeText={(text) => {
-									setField({ ...field, task: text });
+							<Controller
+								control={control}
+								rules={{
+									required: "Task field must be required.",
 								}}
+								render={({ field: { onChange, onBlur, value } }) => <TextInput style={styles.textInput} placeholder="What do you want to do?" onBlur={onBlur} onChangeText={onChange} value={value} />}
+								name="task"
 							/>
+							{errors.task && <Text style={styles.errorText}>{errors.task.message}</Text>}
 						</View>
 						<View style={styles.fieldBox}>
 							<Text style={styles.fieldTitle}>Description :</Text>
-							<TextInput
-								editable
-								multiline
-								numberOfLines={4}
-								style={styles.textInput}
-								placeholder="Enter your description."
-								value={field.description}
-								onChangeText={(text) => {
-									setField({ ...field, description: text });
+							<Controller
+								control={control}
+								rules={{
+									required: "Description field must be required.",
 								}}
+								render={({ field: { onChange, onBlur, value } }) => <TextInput editable multiline numberOfLines={4} style={styles.textInput} placeholder="Enter your description." onBlur={onBlur} onChangeText={onChange} value={value} />}
+								name="description"
 							/>
+							{errors.description && <Text style={styles.errorText}>{errors.description.message}</Text>}
 						</View>
 						<View style={styles.fieldBox}>
-							<Text style={styles.fieldTitle}>Task For :</Text>
-							<Picker
-								style={styles.textInput}
-								selectedValue={field.category_id}
-								onValueChange={(itemValue, itemIndex) => {
-									setField({ ...field, category_id: itemValue });
-								}}>
-								<Picker.Item label="Select Any One" value="" />
-								{categories.map((item, index) => (
-									<Picker.Item key={index} label={item.name} value={item.id} />
-								))}
-							</Picker>
+							<Text style={styles.fieldTitle}>Category :</Text>
+							<Controller
+								control={control}
+								rules={{
+									required: "Category field must be required.",
+								}}
+								render={({ field: { onChange, onBlur, value } }) => (
+									<Picker style={styles.textInput} onBlur={onBlur} onValueChange={onChange} selectedValue={value}>
+										<Picker.Item label="Select Any One" value="" />
+										{categories.map((item, index) => (
+											<Picker.Item key={index} label={item.name} value={item.id} />
+										))}
+									</Picker>
+								)}
+								name="category_id"
+							/>
+							{errors.category_id && <Text style={styles.errorText}>{errors.category_id.message}</Text>}
 						</View>
 						<View style={styles.fieldBox}>
 							<Text style={styles.fieldTitle}>Status :</Text>
-							<SegmentedControl
-								style={[styles.textInput, { padding: 0, height: 40 }]}
-								values={["To Do", "In Progress", "Done"]}
-								selectedIndex={field.status}
-								onChange={(event) => {
-									setField({ ...field, status: event.nativeEvent.selectedSegmentIndex });
+							<Controller
+								control={control}
+								rules={{
+									required: "Status field must be required.",
 								}}
+								render={({ field: { onChange, onBlur, value } }) => (
+									<SegmentedControl style={[styles.textInput, { padding: 0, height: 40 }]} values={["To Do", "In Progress", "Done"]} onBlur={onBlur} selectedIndex={value} onChange={(event) => onChange(event.nativeEvent.selectedSegmentIndex)} />
+								)}
+								name="status"
 							/>
+							{errors.status && <Text style={styles.errorText}>{errors.status.message}</Text>}
 						</View>
-						<Text style={styles.fieldBox}>selected Date & Time : {field.date.toLocaleString()}</Text>
+						<Text style={styles.fieldBox}>selected Date & Time : {date.toLocaleString()}</Text>
 						<View style={styles.fieldBox}>
 							<Text style={styles.fieldTitle}>Select Date :</Text>
 							<Pressable style={[styles.dateTimeButton]} onPress={showDatePicker}>
 								<Text style={{ textAlign: "center" }}>Select Date</Text>
 							</Pressable>
 						</View>
-						<View style={styles.fieldBox}>
-							<Text style={styles.fieldTitle}>Select Time :</Text>
-							<Pressable style={[styles.dateTimeButton]} onPress={showTimePicker}>
-								<Text style={{ textAlign: "center" }}>Select Time</Text>
-							</Pressable>
-						</View>
-						<Pressable style={[styles.button, { right: 80 }]} onPress={submit}>
-							<Text style={styles.textStyle}>Submit</Text>
-						</Pressable>
-						<Pressable style={[styles.button, { backgroundColor: "lightgrey" }]} onPress={closeModal}>
-							<Text style={[styles.textStyle, { color: "black" }]}>Cancel</Text>
-						</Pressable>
 					</ScrollView>
+					<Pressable style={[styles.button, { right: 80 }]} onPress={handleSubmit(submit)}>
+						<Text style={styles.textStyle}>Submit</Text>
+					</Pressable>
+					<Pressable style={[styles.button, { backgroundColor: "lightgrey" }]} onPress={closeModal}>
+						<Text style={[styles.textStyle, { color: "black" }]}>Cancel</Text>
+					</Pressable>
 				</View>
 			</View>
 		</Modal>
@@ -221,7 +234,7 @@ const styles = StyleSheet.create({
 		borderRadius: 20,
 		position: "absolute",
 		bottom: 12,
-		right: 0,
+		right: 10,
 	},
 
 	textStyle: {
@@ -256,5 +269,11 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		marginTop: 5,
 		marginBottom: 5,
+	},
+
+	errorText: {
+		color: "red",
+		fontWeight: "600",
+		marginLeft: 5,
 	},
 });

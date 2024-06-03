@@ -80,6 +80,13 @@ export default class ToDoListDatabase {
 		};
 	}
 
+	async getCategories() {
+		const db = await SQLite.openDatabaseAsync("toDoList");
+		let result = await db.getAllAsync(`SELECT * FROM categories`);
+
+		return result;
+	}
+
 	async getAllTasks() {
 		const db = await SQLite.openDatabaseAsync("toDoList");
 		let result = await db.getAllAsync(`

@@ -6,16 +6,31 @@ import * as SQLite from "expo-sqlite";
 import Form from "./Form.jsx";
 import { Swipeable } from "react-native-gesture-handler";
 import ToDoListDatabase from "../TodoListDataBase.js";
+import { FAB, Portal, PaperProvider } from "react-native-paper";
+
+let buttonColors = ["#A0DEFF", "#B0EBB4", "#BED7DC", "#DCBFFF", "#FFC96F"];
 
 export default function ToDoIndex() {
 	const [data, setData] = useState([]);
+	const [categories, setCategories] = useState([]);
+
+	const [statusButton, setStatusButton] = useState({ open: false });
+	const onStateChange = ({ open }) => setStatusButton({ open });
+	const { open } = statusButton;
 
 	const modalRef = useRef(null);
 
 	useEffect(() => {
 		messageShowing();
 		getAllData();
+		getCategories();
 	}, []);
+
+	const getCategories = async () => {
+		let toDoDB = new ToDoListDatabase();
+		let response = await toDoDB.getCategories();
+		setCategories(response);
+	};
 
 	const messageShowing = async () => {
 		try {
@@ -84,18 +99,11 @@ export default function ToDoIndex() {
 						<Pressable onPress={() => getAllData()} style={[styles.categoryButton, { backgroundColor: "#FFC96F" }]}>
 							<Text style={{ fontSize: 20 }}>All</Text>
 						</Pressable>
-						<Pressable onPress={() => getTasksByCategory(1)} style={[styles.categoryButton, { backgroundColor: "#A0DEFF" }]}>
-							<Text style={{ fontSize: 20 }}>Personal</Text>
-						</Pressable>
-						<Pressable onPress={() => getTasksByCategory(2)} style={[styles.categoryButton, { backgroundColor: "#B0EBB4" }]}>
-							<Text style={{ fontSize: 20 }}>Work</Text>
-						</Pressable>
-						<Pressable onPress={() => getTasksByCategory(3)} style={[styles.categoryButton, { backgroundColor: "#BED7DC" }]}>
-							<Text style={{ fontSize: 20 }}>Daily Routine</Text>
-						</Pressable>
-						<Pressable style={[styles.categoryButton, { backgroundColor: "#DCBFFF" }]}>
-							<Text style={{ fontSize: 20 }}>ETC...</Text>
-						</Pressable>
+						{categories.map((item, index) => (
+							<Pressable key={index} onPress={() => getTasksByCategory(item.id)} style={[styles.categoryButton, { backgroundColor: buttonColors[index] }]}>
+								<Text style={{ fontSize: 20 }}>{item.name}</Text>
+							</Pressable>
+						))}
 					</ScrollView>
 				</View>
 				<View style={{ flex: 12 }}>
@@ -144,6 +152,40 @@ export default function ToDoIndex() {
 				<Pressable style={({ pressed }) => [pressed ? styles.floatingButton : styles.floatingButtonPressed]} onPress={() => openModal()}>
 					{({ pressed }) => <Ionicons name={pressed ? "create" : "create-outline"} size={pressed ? 23 : 28} style={{ color: "white" }} />}
 				</Pressable>
+				<FAB.Group
+					open={open}
+					visible
+					icon={open ? "notebook-check-outline" : "plus"}
+					style={styles.statusButtonStyle}
+					actions={[
+						{
+							icon: "playlist-check",
+							label: "All",
+							onPress: () => console.log("all"),
+						},
+						{
+							icon: "note-outline",
+							label: "To Do",
+							onPress: () => console.log("to do"),
+						},
+						{
+							icon: "note-edit-outline",
+							label: "In Progress",
+							onPress: () => console.log("in progress"),
+						},
+						{
+							icon: "note-check-outline",
+							label: "Complete",
+							onPress: () => console.log("complete"),
+						},
+					]}
+					onStateChange={onStateChange}
+					onPress={() => {
+						if (open) {
+							// do something if the speed dial is open
+						}
+					}}
+				/>
 			</SafeAreaView>
 			<Form ref={modalRef} getAllData={getAllData} />
 		</>
@@ -164,7 +206,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#f4511e",
 		position: "absolute",
 		bottom: 15,
-		right: 15,
+		left: 15,
 	},
 
 	floatingButtonPressed: {
@@ -176,7 +218,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#f4511e",
 		position: "absolute",
 		bottom: 10,
-		right: 10,
+		left: 10,
 	},
 
 	swipePressable: {
@@ -223,5 +265,11 @@ const styles = StyleSheet.create({
 		padding: 10,
 		borderRadius: 5,
 		margin: 5,
+	},
+
+	statusButtonStyle: {
+		position: "absolute",
+		left: -10,
+		bottom: -2,
 	},
 });
