@@ -12,6 +12,10 @@ import Main from "./pages/Main.jsx";
 import Index from "./pages/user/Index.jsx";
 import Form from "./pages/user/Form.jsx";
 import ToDoIndex from "./pages/todo-list/Index.jsx";
+import StudentForm from "./pages/features/StudentForm.jsx";
+
+import store from "./store.jsx";
+import { Provider } from "react-redux";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -40,6 +44,7 @@ export default function RootLayout() {
 				<Drawer.Screen name="pages/Home" component={Home} options={styles.home} />
 				<Drawer.Screen name="pages/todo-list/Index" component={ToDoIndex} options={styles.task} />
 				<Drawer.Screen name="pages/user/Index" component={Index} options={{ title: "User" }} />
+				<Drawer.Screen name="pages/features" component={StudentForm} options={{ title: "Student Form" }} />
 				<Drawer.Screen name="pages/Main" component={Main} options={{ title: "Calculator" }} />
 			</Drawer.Navigator>
 		);
@@ -47,12 +52,14 @@ export default function RootLayout() {
 
 	return (
 		<>
-			<NavigationContainer independent={true}>
-				<Stack.Navigator>
-					<Stack.Screen name="Root" component={Root} options={{ headerShown: false }} />
-					<Stack.Screen name="pages/user/Form" component={Form} options={{ title: "User Form" }} />
-				</Stack.Navigator>
-			</NavigationContainer>
+			<Provider store={store}>
+				<NavigationContainer independent={true}>
+					<Stack.Navigator>
+						<Stack.Screen name="Root" component={Root} options={{ headerShown: false }} />
+						<Stack.Screen name="pages/user/Form" component={Form} options={{ title: "User Form" }} />
+					</Stack.Navigator>
+				</NavigationContainer>
+			</Provider>
 		</>
 	);
 }
@@ -61,7 +68,7 @@ const styles = StyleSheet.create({
 	home: {
 		title: "Home",
 		headerStyle: {
-			backgroundColor: "#f4511e",
+			backgroundColor: "#5AB2FF",
 		},
 		headerTitleAlign: "center",
 		headerTintColor: "#fff",
@@ -75,7 +82,7 @@ const styles = StyleSheet.create({
 	task: {
 		title: "All Tasks",
 		headerStyle: {
-			backgroundColor: "#f4511e",
+			backgroundColor: "#5AB2FF",
 		},
 		headerTitleAlign: "center",
 		headerTintColor: "#fff",

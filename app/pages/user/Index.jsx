@@ -3,11 +3,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import "react-native-gesture-handler";
+import { useSelector } from "react-redux";
 
 let idCounter = 4;
 
 export default function Index({ navigation, route }) {
 	const user = route.params;
+	const student = useSelector((state) => state.studentField);
 	const [users, setUsers] = useState([
 		{
 			id: 1,
@@ -61,9 +63,33 @@ export default function Index({ navigation, route }) {
 			<SafeAreaView>
 				<View style={{ height: "100%", marginTop: 15 }}>
 					<View style={{ alignItems: "center", marginBottom: 15 }}>
-						<Text style={{ fontSize: 30 }}>User Details</Text>
+						<Text style={{ fontSize: 30 }}>Student Details</Text>
 					</View>
-					<View style={{ height: "79%" }}>
+					<View style={{ height: "79%", margin: 5, padding: 10, borderWidth: 1, gap: 10 }}>
+						<View style={styles.textCard}>
+							<Text style={styles.title}>Full Name : </Text>
+							<Text>
+								{student.first_name} {student.last_name}
+							</Text>
+						</View>
+						<View style={styles.textCard}>
+							<Text style={styles.title}>First Name : </Text>
+							<Text>{student.first_name}</Text>
+						</View>
+						<View style={styles.textCard}>
+							<Text style={styles.title}>lastName : </Text>
+							<Text>{student.last_name}</Text>
+						</View>
+						<View style={styles.textCard}>
+							<Text style={styles.title}>City : </Text>
+							<Text>{student.city}</Text>
+						</View>
+						<View style={styles.textCard}>
+							<Text style={styles.title}>Gender : </Text>
+							<Text>{student.gender}</Text>
+						</View>
+					</View>
+					{/* <View style={{ height: "79%" }}>
 						<FlatList
 							data={users}
 							renderItem={({ item, index }) => (
@@ -92,7 +118,7 @@ export default function Index({ navigation, route }) {
 								</ScrollView>
 							)}
 						/>
-					</View>
+					</View> */}
 					<Pressable style={({ pressed }) => [pressed ? styles.floatingButton : styles.floatingButtonPressed]} onPress={() => navigation.navigate("pages/user/Form")}>
 						{({ pressed }) => <Ionicons name="person-add" size={pressed ? 23 : 28} />}
 					</Pressable>
@@ -145,4 +171,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		backgroundColor: "#EEF7FF",
 	},
+
+	textCard: { flexDirection: "row", alignItems: "center" },
+	title: { fontSize: 20, fontWeight: "bold" },
 });

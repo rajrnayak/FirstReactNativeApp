@@ -35,7 +35,6 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 	const openModal = (task) => {
 		if (task) {
 			delete task.category_name;
-			console.log(task);
 			setValue("id", task.id);
 			setValue("task", task.task);
 			setValue("description", task.description);
@@ -80,10 +79,6 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 		showMode("date");
 	};
 
-	const showTimePicker = () => {
-		showMode("time");
-	};
-
 	const storeData = async (task) => {
 		try {
 			task.date = new Date(date).toISOString().slice(0, 10);
@@ -91,8 +86,8 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 			let response = await toDoDB.manageTask(task);
 
 			if (response.message) {
-				await getAllData();
 				closeModal();
+				await getAllData();
 				ToastAndroid.showWithGravity(response.message, ToastAndroid.SHORT, ToastAndroid.CENTER);
 			}
 		} catch (e) {

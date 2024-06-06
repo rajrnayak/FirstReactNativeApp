@@ -87,26 +87,26 @@ export default class ToDoListDatabase {
 		return result;
 	}
 
-	async getAllTasks() {
+	async getAllTasksByValue(category_id, status_id, currentPage = 1) {
+		let totalRow = 6 * currentPage;
 		const db = await SQLite.openDatabaseAsync("toDoList");
-		let result = await db.getAllAsync(`
-			SELECT tasks.*, categories.name as category_name
-			FROM tasks 
-			LEFT JOIN categories ON tasks.category_id = categories.id
-		`);
 
-		return result;
-	}
+		let query = "";
+		let mainQuery = `
+		SELECT tasks.*, categories.name as category_name
+		FROM tasks
+		LEFT JOIN categories ON tasks.category_id = categories.id `;
 
-	async getAllTasksByCategory(id) {
-		const db = await SQLite.openDatabaseAsync("toDoList");
-		let result = await db.getAllAsync(`
-			SELECT tasks.*, categories.name as category_name
-			FROM tasks 
-			LEFT JOIN categories ON tasks.category_id = categories.id
-			WHERE tasks.category_id = ${id}
-		`);
+		category_id != null && (query += `tasks.category_id = '${category_id}'`);
 
+		if (status_id != null) {
+			query != "" && (query += " AND ");
+			query += `tasks.status = '${status_id}'`;
+		}
+
+		query != "" && (mainQuery += ` WHERE ${query}`);
+
+		let result = await db.getAllAsync(mainQuery + `LIMIT ${totalRow}`);
 		return result;
 	}
 

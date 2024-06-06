@@ -4,9 +4,13 @@ import ToDoListDatabase from "./TodoListDataBase.js";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import { useSelector, useDispatch } from "react-redux";
+import { decrement, increment } from "./features/counterSlice.jsx";
 
 export default function Home({ navigation }) {
 	const [tasksData, setTasksData] = useState({});
+	const count = useSelector((state) => state.counter.value);
+	const dispatch = useDispatch();
 
 	useEffect(() => {
 		let toDoDB = new ToDoListDatabase();
@@ -140,6 +144,15 @@ export default function Home({ navigation }) {
 							</ScrollView>
 						)}
 					/>
+				</View>
+				<View style={{ flexDirection: "row", justifyContent: "space-around", position: "absolute", bottom: 5 }}>
+					<Pressable style={{ padding: 10, backgroundColor: "skyblue", borderRadius: 5 }} onPress={() => dispatch(increment())}>
+						<Text>Plus</Text>
+					</Pressable>
+					<Text style={{ padding: 10 }}>{count}</Text>
+					<Pressable style={{ padding: 10, backgroundColor: "powderblue", borderRadius: 5 }} onPress={() => dispatch(decrement())}>
+						<Text>Minus</Text>
+					</Pressable>
 				</View>
 			</View>
 		</>
