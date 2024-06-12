@@ -3,11 +3,11 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
-import * as SQLite from "expo-sqlite";
 import ToDoListDatabase from "../TodoListDataBase";
 import { useForm, Controller } from "react-hook-form";
+import { useSelector } from "react-redux";
 
-const Form = forwardRef(function Form({ getAllData }, ref) {
+const Form = forwardRef(function Form({ getAllData, user_id }, ref) {
 	const [modalVisible, setModalVisible] = useState(false);
 	const [date, setDate] = useState(new Date());
 	const [categories, setCategories] = useState([]);
@@ -25,6 +25,7 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 			category_id: "",
 			status: "",
 			date: "",
+			user_id: "",
 		},
 	});
 
@@ -34,7 +35,6 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 
 	const openModal = (task) => {
 		if (task) {
-			delete task.category_name;
 			setValue("id", task.id);
 			setValue("task", task.task);
 			setValue("description", task.description);
@@ -82,6 +82,8 @@ const Form = forwardRef(function Form({ getAllData }, ref) {
 	const storeData = async (task) => {
 		try {
 			task.date = new Date(date).toISOString().slice(0, 10);
+			task.user_id = user_id;
+
 			let toDoDB = new ToDoListDatabase();
 			let response = await toDoDB.manageTask(task);
 

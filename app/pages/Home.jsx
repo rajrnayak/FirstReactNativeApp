@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import SegmentedControl from "@react-native-segmented-control/segmented-control";
 import { useSelector, useDispatch } from "react-redux";
 import { decrement, increment } from "./features/counterSlice.jsx";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Home({ navigation }) {
 	const [tasksData, setTasksData] = useState({});
@@ -13,16 +14,19 @@ export default function Home({ navigation }) {
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		let toDoDB = new ToDoListDatabase();
-		// toDoDB.dropTables();
-		toDoDB.createCategoriesTable();
-		toDoDB.createTaskTable();
-		getTasksData();
+		// test();
+		// getTasksData();
 	}, []);
 
-	useEffect(() => {
-		getTasksData(tasksData.renderLimit);
-	}, [tasksData.renderLimit]);
+	const test = async () => {
+		const value = await AsyncStorage.getItem("userAuth");
+		let obj = JSON.parse(value);
+		console.log(obj);
+	};
+
+	// useEffect(() => {
+	// 	getTasksData(tasksData.renderLimit);
+	// }, [tasksData.renderLimit]);
 
 	const getTasksData = async (limit) => {
 		let toDoDB = new ToDoListDatabase();

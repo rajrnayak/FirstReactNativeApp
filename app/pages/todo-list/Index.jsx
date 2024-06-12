@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View, SafeAreaView, Pressable, ScrollView, FlatList, Alert, ToastAndroid, Modal, ActivityIndicator } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useRef, useState } from "react";
-import * as SQLite from "expo-sqlite";
 import Form from "./Form.jsx";
 import { Swipeable } from "react-native-gesture-handler";
 import ToDoListDatabase from "../TodoListDataBase.js";
@@ -25,13 +24,12 @@ export default function ToDoIndex({ navigation }) {
 	});
 	const [currentPage, setCurrentPage] = useState(1);
 	const count = useSelector((state) => state.counter.value);
+	const user_id = useSelector((state) => state.userAuth.user.id);
 
 	const modalRef = useRef(null);
 
 	useEffect(() => {
-		// messageShowing();
-		getCategories();
-		getTasksByValue();
+		loadCategoriesAndTasks();
 	}, []);
 
 	useEffect(() => {
@@ -39,12 +37,17 @@ export default function ToDoIndex({ navigation }) {
 		getTasksByValue();
 	}, [loadData]);
 
-	const getCategories = async () => {
+	const loadCategoriesAndTasks = async () => {
 		setVisible({ ...visible, loader: true });
+		await getCategories();
+		await getTasksByValue();
+		setVisible({ ...visible, loader: false });
+	};
+
+	const getCategories = async () => {
 		let toDoDB = new ToDoListDatabase();
 		let response = await toDoDB.getCategories();
 		setCategories(response);
-		setVisible({ ...visible, loader: false });
 	};
 
 	const messageShowing = async () => {
@@ -60,7 +63,7 @@ export default function ToDoIndex({ navigation }) {
 		try {
 			setVisible({ ...visible, loader: true });
 			let toDoDB = new ToDoListDatabase();
-			let response = await toDoDB.getAllTasksByValue(loadData.category, loadData.status);
+			let response = await toDoDB.getAllTasksByValue(loadData.category, loadData.status, 1, user_id);
 			await setData(response);
 			setVisible({ ...visible, loader: false });
 		} catch (e) {
@@ -73,7 +76,7 @@ export default function ToDoIndex({ navigation }) {
 			setVisible({ ...visible, scrollLoader: true });
 			setCurrentPage((p) => p + 1);
 			let toDoDB = new ToDoListDatabase();
-			let response = await toDoDB.getAllTasksByValue(loadData.category, loadData.status, currentPage);
+			let response = await toDoDB.getAllTasksByValue(loadData.category, loadData.status, currentPage, user_id);
 			await setData(response);
 			setVisible({ ...visible, scrollLoader: false });
 		} catch (e) {
@@ -203,6 +206,7 @@ export default function ToDoIndex({ navigation }) {
 											</View>
 										</View>
 
+										<Text>Created By : {item.user_name}</Text>
 										<Text style={styles.cardDate}>{new Date(item.date).toDateString()}</Text>
 									</Pressable>
 								</Swipeable>
@@ -218,7 +222,7 @@ export default function ToDoIndex({ navigation }) {
 					<Text>Counter : {count}</Text>
 				</Pressable>
 			</SafeAreaView>
-			<Form ref={modalRef} getAllData={getTasksByValue} />
+			<Form ref={modalRef} getAllData={getTasksByValue} user_id={user_id} />
 			<Modal
 				animationType="slide"
 				transparent={true}

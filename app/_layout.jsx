@@ -1,27 +1,14 @@
-import { NavigationContainer } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createDrawerNavigator } from "@react-navigation/drawer";
 import "react-native-gesture-handler";
-import { StyleSheet } from "react-native";
-import Home from "./pages/Home.jsx";
-import Main from "./pages/Main.jsx";
-import Index from "./pages/user/Index.jsx";
-import Form from "./pages/user/Form.jsx";
-import ToDoIndex from "./pages/todo-list/Index.jsx";
-import StudentForm from "./pages/features/StudentForm.jsx";
-
 import store from "./store.jsx";
 import { Provider } from "react-redux";
+import App from "./pages/App.jsx";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
-const Stack = createNativeStackNavigator();
-const Drawer = createDrawerNavigator();
 
 export default function RootLayout() {
 	const [loaded] = useFonts({
@@ -38,58 +25,11 @@ export default function RootLayout() {
 		return null;
 	}
 
-	function Root() {
-		return (
-			<Drawer.Navigator initialRouteName="pages/Home">
-				<Drawer.Screen name="pages/Home" component={Home} options={styles.home} />
-				<Drawer.Screen name="pages/todo-list/Index" component={ToDoIndex} options={styles.task} />
-				<Drawer.Screen name="pages/user/Index" component={Index} options={{ title: "User" }} />
-				<Drawer.Screen name="pages/features" component={StudentForm} options={{ title: "Student Form" }} />
-				<Drawer.Screen name="pages/Main" component={Main} options={{ title: "Calculator" }} />
-			</Drawer.Navigator>
-		);
-	}
-
 	return (
 		<>
 			<Provider store={store}>
-				<NavigationContainer independent={true}>
-					<Stack.Navigator>
-						<Stack.Screen name="Root" component={Root} options={{ headerShown: false }} />
-						<Stack.Screen name="pages/user/Form" component={Form} options={{ title: "User Form" }} />
-					</Stack.Navigator>
-				</NavigationContainer>
+				<App />
 			</Provider>
 		</>
 	);
 }
-
-const styles = StyleSheet.create({
-	home: {
-		title: "Home",
-		headerStyle: {
-			backgroundColor: "#5AB2FF",
-		},
-		headerTitleAlign: "center",
-		headerTintColor: "#fff",
-		headerTitleStyle: {
-			textAlign: "center",
-			fontWeight: "bold",
-		},
-		unmountOnBlur: true,
-	},
-
-	task: {
-		title: "All Tasks",
-		headerStyle: {
-			backgroundColor: "#5AB2FF",
-		},
-		headerTitleAlign: "center",
-		headerTintColor: "#fff",
-		headerTitleStyle: {
-			textAlign: "center",
-			fontWeight: "bold",
-		},
-		unmountOnBlur: true,
-	},
-});
